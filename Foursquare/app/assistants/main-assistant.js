@@ -44,7 +44,7 @@ MainAssistant.prototype.gpsTimedOut = function(){
 	logthis("trying one-off request");
 	fsq.Metrix.ServiceRequest.request('palm://com.palm.location', {
 		method: "getCurrentPosition",
-		parameters: {accuracy: 1, maximumAge:0, responseTime: 1},
+		parameters: {accuracy: 3, maximumAge:0, responseTime: 3},
 		onSuccess: this.gpsSuccessBound,
 		onFailure: this.failedLocationBound
 	});
@@ -59,9 +59,13 @@ logthis("getting location...");
 	this.gpsTimeout=this.controller.window.setTimeout(function(){this.gpsTimedOut();}.bind(this),17000);
 	
 	this.trackGPSObjA = new Mojo.Service.Request('palm://com.palm.location', {
-		method: 'startTracking',
+		//method: 'startTracking',
+		method: 'getCurrentPosition',
 		parameters: {
-			subscribe: true
+			//subscribe: true
+			accuracy: 1,
+			maximumAge: 30,
+			responseTime: 1
 		},
 		onSuccess: function(event){
 			logthis("gps ok!");
@@ -125,62 +129,21 @@ logthis("getting location...");
 		onFailure: function(event){
 			this.controller.get("gps-message").update("GPS Failure! Error: "+event.errorCode);
 			this.controller.window.clearTimeout(this.gpsTimeout);
-
+			this.gpsTimedout();
 			//Mojo.Log.error("*** trackGPSObj FAILURE: " + event.errorCode + " [" + gps.errorCodeDescription(event.errorCode) + "]");
 		}.bind(this)
 	});
 	
-	logthis("gettting location b");
-
-	//--> Launch a second tracking to 'unstick' GPS
-	this.trackGPSObjB = new Mojo.Service.Request('palm://com.palm.location', {
-		method: 'startTracking',
-		parameters: {
-			subscribe: true
-		},
-		onSuccess: function(event){
-			if (event.errorCode){
-				logthis("tracker b canceled");
-				this.trackGPSObjB.cancel();		//--> Stop tracking
-			}
-		}.bind(this),
-		onFailure: function(event){
-			//logthis("*** trackGPSObjB FAILURE: " + event.errorCode + " [" + gps.errorCodeDescription(event.errorCode) + "]");
-			logthis("tracker b failed: "+event.errorCode);
-		}.bind(this)
-	});
 	
-	logthis("getting location c");
-	//--> Launch a third tracking to 'unstick' GPS
-	this.trackGPSObjC = new Mojo.Service.Request('palm://com.palm.location', {
-		method: 'startTracking',
-		parameters: {
-			subscribe: true
-		},
-		onSuccess: function(event){
-			if (event.errorCode){
-				logthis("tracker c canceled");
-				this.trackGPSObjC.cancel();		//--> Stop tracking
-			}
-		}.bind(this),
-		onFailure: function(event){
-			logthis("tracker c failed: "+event.errorCode);
-			//logthis("*** trackGPSObjC FAILURE: " + event.errorCode + " [" + gps.errorCodeDescription(event.errorCode) + "]");
-		}.bind(this)
-	});
 }
 MainAssistant.prototype.getLocationClearAll = function(event){
 	logthis("clearing all trackers");
 
-	try{
-		this.trackGPSObjC.cancel();
-	}catch(e){logthis("tracker c failed clear");}
+	
 	try{
 		this.trackGPSObjA.cancel();
 	}catch(e){logthis("tracker a failed clear");}
-	try{
-		this.trackGPSObjB.cancel();
-	}catch(e){logthis("tracker b failed clear");}
+	
 };
 
 MainAssistant.prototype.setup = function() {

@@ -123,11 +123,13 @@ MainAssistant.prototype.getLocation = function(event){
 logthis("getting location...");
 	this.gettingGPS=true;
 	this.controller.get("gps-message").update("Initiating GPS...");
+	var scalingFactor = this.controller.window.zoomFactor || 1;
 	
 	//From my personal experience, find verizon phones without QCOM chipsets
 	//Not the best way, but probably the only 'legal' way to identify pre-plus verizon
 	this.cpVerizon = (Mojo.Environment.DeviceInfo.carrierName.indexOf("Verizon") === 0) 
 	&& (Mojo.Environment.DeviceInfo.modelNameAscii.indexOf("Pre") === 0);
+	this.cpVerizon = this.cpVerizon && (scalingFactor === 1);
 	//Mojo.Log.error("Device S/N: " + Mojo.Environment.DeviceInfo.serialNumber);
 	Mojo.Log.error("Castle+ Verzion?: " + this.cpVerizon);
 	

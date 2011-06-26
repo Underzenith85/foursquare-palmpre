@@ -26,105 +26,89 @@ function MainAssistant(expressLogin,credentials,fp) {
 	   _globals.firstLoad=true;
 	   this.wrongcreds=false;
 	   this.gpsCount=0;
-	   
 	   this.gettingGPS=false;
 	   
 };
 MainAssistant.prototype.gpsTimedOut = function(){
 	logthis("gps timed out. trying one final time");
-	this.controller.get("gps-message").update("GPS timed out! Trying again...");
 	this.controller.window.clearTimeout(this.gpsTimeout);
-
-    this.getLocationClearAll();
-
-	logthis("cleared gps trackers");
+	this.getLocationClearAll();
+	if (this.gpsCount === 0){
 	
-	this.failedLocationBound=this.failedLocation.bind(this);
+		this.controller.get("gps-message").update("GPS Timed Out: Attempting low-resolution fix...");
+	
+		logthis("cleared gps trackers");
+	
+		this.failedLocationBound=this.failedLocation.bind(this);
 
-	logthis("trying one-off request");
-	fsq.Metrix.ServiceRequest.request('palm://com.palm.location', {
-		method: "getCurrentPosition",
-		parameters: {accuracy: 3, maximumAge:0, responseTime: 3},
-		onSuccess: this.gpsSuccessBound,
-		onFailure: this.failedLocationBound
-	});
+		logthis("trying one-off request");
+		fsq.Metrix.ServiceRequest.request('palm://com.palm.location', {
+			method: "getCurrentPosition",
+			parameters: this.gpsParameterLow,
+			onSuccess: this.gpsSuccessBound,
+			onFailure: this.failedLocationBound
+		});
+	}else{
+		this.gpsSuccessBound(_globals.gps);
+	}
 
 };
 
-MainAssistant.prototype.getLocation = function(event){
-logthis("getting location...");
-	this.gettingGPS=true;
-	this.controller.get("gps-message").update("Initiating GPS...");
-	//set up the timeout timer
-	this.gpsTimeout=this.controller.window.setTimeout(function(){this.gpsTimedOut();}.bind(this),17000);
-	
+MainAssistant.prototype.getLocationImpl = function(event){
+	var gpsStrategy = {};
+	//GPS Strategy!
+	if (this.gpsCount === 0){
+		if(this.cpVerizon){
+			gpsStrategy = this.gpsParameterLow;
+		}else{
+			gpsStrategy = this.gpsParameterHigh;
+		}
+		
+	}else{
+		gpsStrategy = this.gpsParameterHigh;
+	}
 	this.trackGPSObjA = new Mojo.Service.Request('palm://com.palm.location', {
 		//method: 'startTracking',
 		method: 'getCurrentPosition',
-		parameters: {
-			//subscribe: true
-			accuracy: 1,
-			maximumAge: 30,
-			responseTime: 1
-		},
+		
+		parameters: gpsStrategy,
 		onSuccess: function(event){
 			logthis("gps ok!");
 			logthis(Object.toJSON(event));
 			this.gpsCount++;
-			if (event.errorCode==undefined){
-				//--> This is simply our 'returnValue: true' call. No data here.
-				logthis("true call");
-				this.controller.get("gps-message").update("Finding your location...");
+			
+			if (event.errorCode != 0){
+				logthis("location error");
+				this.failedLocationBound=this.failedLocation.bind(this);
+				this.failedLocationBound(event);
+				if (event.errorCode == 5){
+					//--> Alert user that location services are off	
+					this.controller.get("gps-message").update("Location services not enabled!");
+					this.controller.window.clearTimeout(this.gpsTimeout);
+				}else if (event.errorCode == 4){
+					//--> Alert user that GPS Permanent Failure (reboot device is the advice).
+					this.controller.get("gps-message").update("Permanent GPS Failure! Restart device.");
+					this.controller.window.clearTimeout(this.gpsTimeout);
 
+				}
 			}else{
-				if (event.errorCode != 0){
-					logthis("location error");
-					this.failedLocationBound=this.failedLocation.bind(this);
-					this.failedLocationBound(event);
-					if (event.errorCode == 5){
-						//--> Alert user that location services are off	
-						this.controller.get("gps-message").update("Location services not enabled!");
-						this.controller.window.clearTimeout(this.gpsTimeout);
-
-					}else if (event.errorCode == 4){
-						//--> Alert user that GPS Permanent Failure (reboot device is the advice).
-						this.controller.get("gps-message").update("Permanent GPS Failure! Restart device.");
-						this.controller.window.clearTimeout(this.gpsTimeout);
-
-					}
-				}else{
-					logthis("location  OK!");
-					//--> Got a GPS Response, cache it for later!
-					_globals.gps = event;
-					
-					var acc=(_globals.gpsAccuracy != undefined)? Math.abs(_globals.gpsAccuracy): 750;
-					logthis("acc="+acc);
-					if(this.gpsCount<4){
-						if(acc>=event.horizAccuracy || acc==0){
-							this.controller.get("gps-message").update("Found you!");
-
-							this.gpsSuccessBound(event);
-							
-							//--> Stop tracking
-							this.trackGPSObjA.cancel();							
-						}else{
-							this.controller.get("gps-message").update("Getting better accuracy...");
-						}
-					}else{
-					
-						//--> Do your other stuff here and give up
-						/*		... code	
-							*/
+				logthis("location  OK!");
+				//--> Got a GPS Response, cache it for later!
+				_globals.gps = event;
+				
+				var acc=(_globals.gpsAccuracy != undefined)? Math.abs(_globals.gpsAccuracy): 750;
+				logthis("acc="+acc);
+				if(this.gpsCount<4){
+					if(acc>=event.horizAccuracy || acc==0){
 						this.controller.get("gps-message").update("Found you!");
-
 						this.gpsSuccessBound(event);
-						
-						//--> Stop tracking
-						this.trackGPSObjA.cancel();
-					
-					}
+													
+				}else{
+					this.controller.get("gps-message").update("Getting better accuracy...");
+					this.getLocationImpl();
 				}
 			}
+		}
 		}.bind(this),
 		onFailure: function(event){
 			this.controller.get("gps-message").update("GPS Failure! Error: "+event.errorCode);
@@ -133,6 +117,38 @@ logthis("getting location...");
 			//Mojo.Log.error("*** trackGPSObj FAILURE: " + event.errorCode + " [" + gps.errorCodeDescription(event.errorCode) + "]");
 		}.bind(this)
 	});
+}
+
+MainAssistant.prototype.getLocation = function(event){
+logthis("getting location...");
+	this.gettingGPS=true;
+	this.controller.get("gps-message").update("Initiating GPS...");
+	
+	//From my personal experience, find verizon phones without QCOM chipsets
+	//Not the best way, but probably the only 'legal' way to identify pre-plus verizon
+	this.cpVerizon = (Mojo.Environment.DeviceInfo.carrierName.indexOf("Verizon") === 0) 
+	&& (Mojo.Environment.DeviceInfo.modelNameAscii.indexOf("Pre") === 0);
+	//Mojo.Log.error("Device S/N: " + Mojo.Environment.DeviceInfo.serialNumber);
+	Mojo.Log.error("Castle+ Verzion?: " + this.cpVerizon);
+	
+
+	this.gpsParameterLow = {
+		accuracy: 3,
+		maximumAge: 0,
+		responseTime: 1
+	}
+	
+	this.gpsParameterHigh = {
+		accuracy: 1,
+		maximumAge: 0,
+		responseTime: 3
+	}
+	
+	
+	//set up the timeout timer (give it 20 seconds to go through this logic)
+	this.gpsTimeout=this.controller.window.setTimeout(function(){this.gpsTimedOut();}.bind(this),30000);
+	
+	this.getLocationImpl();
 	
 	
 }
@@ -497,11 +513,11 @@ MainAssistant.prototype.proceed = function(){
 
 
 MainAssistant.prototype.gpsSuccess = function(event) {
-	logthis("got gps response");
+	Mojo.Log.error("got gps response");
 	this.controller.window.clearTimeout(this.gpsTimeout);
 
 	if(event.errorCode==0){
-		logthis("gps is ok");
+		Mojo.Log.error("gps is ok");
 		
 		_globals.lat=event.latitude;
 		_globals.long=event.longitude;

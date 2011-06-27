@@ -93,6 +93,9 @@ MainAssistant.prototype.getLocationImpl = function(event){
 				}
 			}else{
 				logthis("location  OK!");
+				
+				event = _globals.fixGPSSouthernHemisphere(event);
+				
 				//--> Got a GPS Response, cache it for later!
 				_globals.gps = event;
 				
@@ -520,6 +523,8 @@ MainAssistant.prototype.gpsSuccess = function(event) {
 
 	if(event.errorCode==0){
 		Mojo.Log.error("gps is ok");
+		
+		event = _globals.fixGPSSouthernHemisphere(event);
 		
 		_globals.lat=event.latitude;
 		_globals.long=event.longitude;

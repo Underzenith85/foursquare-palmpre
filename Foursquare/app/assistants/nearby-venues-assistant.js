@@ -533,6 +533,8 @@ NearbyVenuesAssistant.prototype.gotLocation = function(event) {
 	if(event.errorCode == 0) {
 		//check their prefs. if the results are good enough, carry on
 		//otherwise, repoll the gps
+		
+		event = _globals.fixGPSSouthernHemisphere(event);
 		this.controller.get('getting-gps-alert').hide();
 		this.lat=event.latitude;
 		this.long=event.longitude;

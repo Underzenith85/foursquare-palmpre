@@ -31,6 +31,8 @@ GPS.prototype.go = function() {
     		logthis("got gps response...");
 	    	if (response.errorCode==0) {
 	    		logthis("gps success");
+	    		response = _globals.fixGPSSouthernHemisphere(response);
+	    		Mojo.Log.error("gps.js: " + response.latitude);
 	    		this.going=true;
 	        	this.location.set(response);
 	     	}else if(response.errorCode>0){

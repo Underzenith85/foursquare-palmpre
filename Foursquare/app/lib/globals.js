@@ -1,6 +1,6 @@
 //Set up global vars and functions
 var _globals = {};
-window.maps = window.maps || {};
+window.maps = window.maps || {};  
 fsq = {};
 logthis("globals started launch");
 fsq.Metrix = new Metrix();
@@ -954,6 +954,20 @@ _globals.openApp = function(controller, name, appId, params) {
 		onFailure: _globals.errorOpenAppDialog.curry(name, appId, controller)
 	})
 };
+
+_globals.fixGPSSouthernHemisphere = function(gpsEvent){
+
+	//Correct for Southern Hemi-sphere GPS fail
+	Mojo.Log.info("Checking GPS correctness for our southern hemisphere friends...");
+	var latitude = gpsEvent.latitude;
+	Mojo.Log.info("Reported Latitude: " + latitude);
+	if (latitude > 30){
+			gpsEvent.latitude = (latitude - 360) * -1;
+			Mojo.Log.error("Fixed Latitude: " + gpsEvent.latitude);
+	}
+	
+	return gpsEvent;
+}
 
 /**
  * errorOpenAppDialog - presents dialog and asks if the users wants

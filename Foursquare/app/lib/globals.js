@@ -961,7 +961,7 @@ _globals.fixGPSSouthernHemisphere = function(gpsEvent){
 	Mojo.Log.info("Checking GPS correctness for our southern hemisphere friends...");
 	var latitude = gpsEvent.latitude;
 	Mojo.Log.info("Reported Latitude: " + latitude);
-	if (latitude > 30){
+	if (latitude > 360){
 			gpsEvent.latitude = (latitude - 360) * -1;
 			Mojo.Log.error("Fixed Latitude: " + gpsEvent.latitude);
 	}

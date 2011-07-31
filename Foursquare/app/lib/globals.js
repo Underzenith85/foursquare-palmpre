@@ -4,7 +4,7 @@ window.maps = window.maps || {};
 fsq = {};
 logthis("globals started launch");
 fsq.Metrix = new Metrix();
-_globals.v="20110505";
+_globals.v="20110720";
 _globals.db = new Mojo.Depot({name:"feed"}, function(){logthis("depot OK");}, function(){logthis("depot FAIL");}); 
 _globals.rdb = new Mojo.Depot({name:"rec"}, function(){logthis("recdepot OK");}, function(){logthis("recdepot FAIL");}); 
 _globals.debugMode=true;
@@ -58,6 +58,7 @@ _globals.whatsnew={
 	"id":"whatsnew",
 	"icon":"",
 	"pages":[
+		"Here's what's new in foursquare webOS <b>v2.7.7</b>! Follow me on Twitter: <a href=\"http://mobile.twitter.com/zhephree\">@zhephree</a><ul><li>Added Spaz as a Twitter client option</li><li>Fixed a bug preventing venues from displaying; now sorted by your likely selection; not by distance or grouped (Foursquare API Change)</li><li>Fixed a bug where 'undefined' was displayed as the venue address</li></ul>",
 		"Here's what's new in foursquare webOS <b>v2.7.5</b>! Follow me on Twitter: <a href=\"http://mobile.twitter.com/zhephree\">@zhephree</a><ul><li>A change in the foursquare API prevented venues from being listed</li></ul>",
 		"Here's what's new in foursquare webOS <b>v2.7.4</b>! Follow me on Twitter: <a href=\"http://mobile.twitter.com/zhephree\">@zhephree</a><ul><li>OAuth / sign-in issues resolved</li></ul>",
 		"Here's what's new in foursquare webOS <b>v2.7.3</b>! Follow me on Twitter: <a href=\"http://mobile.twitter.com/zhephree\">@zhephree</a><ul><li>GPS Issues resolved</li></ul>",
@@ -393,6 +394,18 @@ function foursquareGet(that,opts){
 			   		logthis("code="+r.responseJSON.meta.code);
 			   		//if(r.status!=0){
 			   			if(r.responseJSON.meta.code=="200" || r.responseJSON.meta.code==200){
+			   			 //every response should include a notifications object now. let's handle that
+			   			 if(r.responseJSON.notifications !=undefined){
+                    for(var n=0;n<r.responseJSON.notifications.length;n++){
+                      if(r.responseJSON.notifications[n].type=="notificationTray"){
+                        var notif=r.responseJSON.notifications[n].item;
+                        var unread=notif.unreadCount;
+                        
+                        //TODO: display notification count
+                      }
+                    }
+               }
+			   			
 			   				opts.onSuccess(r);
 			   			}else if(r.responseJSON.meta.errorType!=undefined){
 			   				logthis("has error");

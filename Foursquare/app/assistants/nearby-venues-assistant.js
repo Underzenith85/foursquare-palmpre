@@ -58,14 +58,14 @@ NearbyVenuesAssistant.prototype.setup = function() {
 
 		NavMenu.setup(this,{buttons: 'venues'});
 
-       this.controller.setupWidget("drawerId",
+/*       this.controller.setupWidget("drawerId",
          this.drawerAttributes = {
              modelProperty: 'open',
              unstyled: false
          },
          this.drawerModel = {
              open: false
-         });
+         });*/
 
 
 	//Create the attributes for the textfield
@@ -368,7 +368,7 @@ NearbyVenuesAssistant.prototype.specialsSuccess = function(r){
 			this.controller.get("specials-count").show();
 			for(var v=0;v<specials.items.length;v++){
 				var venue=specials.items[v].venue;
-				console.log("special venue="+venue);
+				//console.log("special venue="+venue);
 				if(venue.categories.length==0){
 					venue.primarycategory={};
 					venue.primarycategory.icon="images/no-cat.png";
@@ -1005,14 +1005,14 @@ NearbyVenuesAssistant.prototype.handleCommand = function(event) {
 					var scroller = this.controller.getSceneScroller();
 					//call the widget method for scrolling to the top
 					scroller.mojo.revealTop(0);
-					this.controller.get("drawerId").mojo.toggleState();
+					/*this.controller.get("drawerId").mojo.toggleState();
 					this.controller.modelChanged(this.drawerModel);
 					var os=this.controller.get("drawerId").mojo.getOpenState();
 					if(os) {
 						this.controller.get("sendField").mojo.focus();
 					}else{
 						this.controller.get("sendField").mojo.blur();
-					}
+					}*/
                 	break;
                 case "nearby-venues":
                 	this.resultsModel.items=_globals.actualVenues;
@@ -1020,7 +1020,7 @@ NearbyVenuesAssistant.prototype.handleCommand = function(event) {
 					this.controller.get("results-venue-list").mojo.noticeUpdatedItems(0, _globals.actualVenues);
 			  		this.controller.get("results-venue-list").mojo.setCount(_globals.actualVenues.length);
                 	this.dosearch=false;
-	                this.controller.get("drawerId").mojo.setOpenState(false);
+//	                this.controller.get("drawerId").mojo.setOpenState(false);
                 	break;
 				case "venue-map":
 					this.controller.stageController.pushScene({name: "nearby-venues-map", transition: Mojo.Transition.crossFade, disableSceneScroller: true},this.lat,this.long,this.resultsModel.items,this.username,this.password,this.uid,this,this.query);
@@ -1161,7 +1161,7 @@ NearbyVenuesAssistant.prototype.popupChoose = function(event) {
 					var scroller = this.controller.getSceneScroller();
 					//call the widget method for scrolling to the top
 					scroller.mojo.revealTop(0);
-					this.controller.get("drawerId").mojo.toggleState();
+/*					this.controller.get("drawerId").mojo.toggleState();
 					this.controller.modelChanged(this.drawerModel);
 					var os=this.controller.get("drawerId").mojo.getOpenState();
 					if(!os) {
@@ -1170,7 +1170,7 @@ NearbyVenuesAssistant.prototype.popupChoose = function(event) {
 					}else{
 	            		this.controller.get("vmenu-caption").update("Search");
 						this.controller.get("sendField").mojo.focus();
-					}
+					}*/
                 	break;
 				case "venue-map":
 					var what=this.controller.get("vmenu-caption").innerHTML;
@@ -1186,7 +1186,7 @@ NearbyVenuesAssistant.prototype.popupChoose = function(event) {
 					this.controller.get("results-venue-list").mojo.noticeUpdatedItems(0, _globals.actualVenues);
 			  		this.controller.get("results-venue-list").mojo.setCount(_globals.actualVenues.length);
                 	this.dosearch=false;
-	                this.controller.get("drawerId").mojo.setOpenState(false);
+//	                this.controller.get("drawerId").mojo.setOpenState(false);
 	                break;
 				case "venue-add":
 					this.addNewVenue();
@@ -1241,8 +1241,8 @@ NearbyVenuesAssistant.prototype.activate = function(event) {
 	   if(this.showSearch) {
 			var scroller = this.controller.getSceneScroller();
 			scroller.mojo.revealTop(0);
-			this.controller.get("drawerId").mojo.setOpenState(true);
-			this.controller.modelChanged(this.drawerModel);
+/*			this.controller.get("drawerId").mojo.setOpenState(true);
+			this.controller.modelChanged(this.drawerModel);*/
 
 	   }
 	   
